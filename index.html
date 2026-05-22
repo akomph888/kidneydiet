@@ -1,0 +1,1202 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KidneyDiet - โปรแกรมวางแผนเมนูอาหารผู้ป่วยไตวายเรื้อรังอัจฉริยะ</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Sarabun & Prompt) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Prompt', 'Sarabun', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .renal-safe {
+            border-left: 4px solid #0d9488;
+        }
+        .renal-warning {
+            border-left: 4px solid #ea580c;
+        }
+        .renal-danger {
+            border-left: 4px solid #e11d48;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-slate-800 flex flex-col pb-12">
+
+    <!-- HEADER NAVIGATION -->
+    <nav class="bg-teal-700 text-white shadow-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-teal-600 rounded-xl flex items-center justify-center text-teal-100 shadow-inner">
+                        <i class="fa-solid fa-kidney text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="text-lg font-bold tracking-wide block">KidneyDiet</span>
+                        <span class="text-2xs text-teal-200 block -mt-1 font-light">โภชนาการบำบัดโรคไตอัจฉริยะ</span>
+                    </div>
+                </div>
+                
+                <!-- Desktop Navigation Tab Buttons -->
+                <div class="hidden md:flex space-x-2">
+                    <button onclick="switchTab('calculator')" id="nav-calculator" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium bg-teal-800 text-white transition-all">
+                        <i class="fa-solid fa-calculator mr-1"></i> คำนวณสารอาหาร
+                    </button>
+                    <button onclick="switchTab('planner')" id="nav-planner" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium text-teal-100 hover:bg-teal-600 transition-all">
+                        <i class="fa-solid fa-calendar-week mr-1"></i> แผนอาหาร 7 วัน
+                    </button>
+                    <button onclick="switchTab('recipes')" id="nav-recipes" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium text-teal-100 hover:bg-teal-600 transition-all">
+                        <i class="fa-solid fa-utensils mr-1"></i> คลังสูตรอาหารโรคไต
+                    </button>
+                    <button onclick="switchTab('guide')" id="nav-guide" class="nav-btn px-3 py-2 rounded-lg text-sm font-medium text-teal-100 hover:bg-teal-600 transition-all">
+                        <i class="fa-solid fa-circle-info mr-1"></i> คู่มือความรู้เรื่องไต
+                    </button>
+                </div>
+
+                <!-- Emergency Disclaimer Indicator -->
+                <div class="text-xs bg-teal-800/80 px-3 py-1.5 rounded-lg border border-teal-600 text-teal-100 hidden sm:block">
+                    <i class="fa-solid fa-heart-pulse text-amber-400 mr-1 animate-pulse"></i> ออกแบบตามหลักแพทย์เฉพาะทาง
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Bottom Menu -->
+        <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-2.5 text-slate-500 shadow-xl z-50">
+            <button onclick="switchTab('calculator')" id="mob-nav-calculator" class="flex flex-col items-center space-y-0.5 text-teal-600">
+                <i class="fa-solid fa-calculator text-lg"></i>
+                <span class="text-2xs font-medium">คำนวณ</span>
+            </button>
+            <button onclick="switchTab('planner')" id="mob-nav-planner" class="flex flex-col items-center space-y-0.5">
+                <i class="fa-solid fa-calendar-week text-lg"></i>
+                <span class="text-2xs font-medium">ตารางอาหาร</span>
+            </button>
+            <button onclick="switchTab('recipes')" id="mob-nav-recipes" class="flex flex-col items-center space-y-0.5">
+                <i class="fa-solid fa-utensils text-lg"></i>
+                <span class="text-2xs font-medium">สูตรอาหาร</span>
+            </button>
+            <button onclick="switchTab('guide')" id="mob-nav-guide" class="flex flex-col items-center space-y-0.5">
+                <i class="fa-solid fa-circle-info text-lg"></i>
+                <span class="text-2xs font-medium">คู่มือไต</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- MAIN APP WRAPPER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 mb-16 md:mb-0">
+        
+        <!-- WARNING CARD & CLINICAL NOTE -->
+        <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl flex items-start space-x-3 text-slate-700 shadow-xs">
+            <i class="fa-solid fa-circle-exclamation text-amber-500 text-xl shrink-0 mt-0.5"></i>
+            <div class="text-xs sm:text-sm">
+                <span class="font-bold text-amber-800">คำชี้แจงสำคัญทางคลินิก:</span> 
+                อาหารผู้ป่วยโรคไตวายต้องคำนวณอย่างระมัดระวังตามระยะของโรคและผลเลือดล่าสุด โปรแกรมนี้เป็นเครื่องมือช่วยวางแผนเบื้องต้นตามไกด์ไลน์ทางอายุรศาสตร์โรคไต (Nephrology) ควรปรึกษาแพทย์เจ้าของไข้หรือนักกำหนดอาหารร่วมด้วยเสมอ
+            </div>
+        </div>
+
+        <!-- TAB 1: CALCULATOR & METRICS GENERATOR -->
+        <section id="tab-calculator" class="tab-content space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Left Input Panel -->
+                <div class="lg:col-span-5 bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                    <h2 class="text-lg font-bold mb-4 text-slate-800 flex items-center">
+                        <i class="fa-solid fa-user-gear text-teal-600 mr-2"></i> ข้อมูลสรีระและระยะโรคไต
+                    </h2>
+
+                    <form id="kidney-form" onsubmit="calculateRenalTargets(event)" class="space-y-4">
+                        <!-- Kidney Stage Selector -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">ระยะโรคไตวายเรื้อรัง (CKD Stage)</label>
+                            <select id="input-ckd-stage" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" onchange="onStageChange()">
+                                <option value="early" selected>โรคไตระยะเริ่มต้น (ระยะ 1-2) — eGFR มากกว่า 60</option>
+                                <option value="predialysis">โรคไตระยะรุนแรง ไม่ได้ฟอกไต (ระยะ 3-5) — eGFR ต่ำกว่า 45-60</option>
+                                <option value="hemodialysis">ฟอกเลือดด้วยเครื่องไตเทียม (Hemodialysis — HD)</option>
+                                <option value="peritoneal">ล้างไตทางช่องท้องอย่างต่อเนื่อง (CAPD)</option>
+                            </select>
+                        </div>
+
+                        <!-- Gender Selector -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-500 mb-1">เพศผู้ป่วย</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label id="label-gender-male" class="border-2 border-teal-500 bg-teal-50/40 rounded-xl p-2.5 flex items-center justify-center cursor-pointer transition-all text-center">
+                                    <input type="radio" name="gender" value="male" checked class="hidden" onchange="toggleGender('male')">
+                                    <span class="text-sm font-semibold text-teal-700"><i class="fa-solid fa-mars mr-1"></i> ชาย</span>
+                                </label>
+                                <label id="label-gender-female" class="border border-slate-200 rounded-xl p-2.5 flex items-center justify-center cursor-pointer transition-all text-center">
+                                    <input type="radio" name="gender" value="female" class="hidden" onchange="toggleGender('female')">
+                                    <span class="text-sm font-semibold text-slate-600"><i class="fa-solid fa-venus mr-1"></i> หญิง</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Numeric Stats Grid -->
+                        <div class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1" title="อ้างอิงน้ำหนักแห้งกรณีมีอาการบวมน้ำ">น้ำหนัก (กก.)</label>
+                                <input type="number" id="input-weight" value="60" min="30" max="150" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" required>
+                                <p class="text-2xs text-slate-400 mt-1">*ใช้น้ำหนักแห้ง</p>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">ส่วนสูง (ซม.)</label>
+                                <input type="number" id="input-height" value="165" min="100" max="220" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" required>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-slate-500 mb-1">อายุ (ปี)</label>
+                                <input type="number" id="input-age" value="62" min="10" max="100" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" required>
+                            </div>
+                        </div>
+
+                        <!-- Lab Results Input (Optional) -->
+                        <div class="bg-teal-50/50 p-4 rounded-xl border border-teal-100/60 space-y-3">
+                            <span class="text-xs font-bold text-teal-800 flex items-center">
+                                <i class="fa-solid fa-vial-circle-check mr-1.5"></i> ผลแล็บเลือดปัจจุบัน (ถ้ามี)
+                            </span>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-3xs font-semibold text-slate-500 mb-1">ค่าโพแทสเซียม (K+) (mEq/L)</label>
+                                    <input type="number" step="0.1" id="lab-potassium" placeholder="เช่น 4.2" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                </div>
+                                <div>
+                                    <label class="block text-3xs font-semibold text-slate-500 mb-1">ค่าฟอสฟอรัส (P) (mg/dL)</label>
+                                    <input type="number" step="0.1" id="lab-phosphorus" placeholder="เช่น 3.8" class="w-full bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="w-full bg-teal-600 text-white rounded-xl py-3 font-semibold hover:bg-teal-700 transition-colors shadow-sm flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-calculator"></i>
+                            <span>คำนวณและปรับตารางโภชนาการ</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- Right Display & Targets Panel -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                        <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                            <h2 class="text-lg font-bold text-slate-800 flex items-center">
+                                <i class="fa-solid fa-circle-check text-emerald-500 mr-2"></i> เป้าหมายสารอาหารที่คำนวณได้ต่อวัน
+                            </h2>
+                            <span id="badge-stage-name" class="text-2xs font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 uppercase">ไตระยะ 3-5 (ก่อนฟอก)</span>
+                        </div>
+
+                        <!-- Ideal Body Weight clinical insight -->
+                        <div class="text-xs text-slate-500 bg-slate-50 p-3 rounded-lg mb-6 flex justify-between items-center">
+                            <span>น้ำหนักตัวในอุดมคติ (Ideal Body Weight):</span>
+                            <span class="font-bold text-slate-800" id="val-ibw">55.0 กก.</span>
+                        </div>
+
+                        <!-- Big Numbers Target Cards Grid -->
+                        <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                                <p class="text-3xs font-bold text-slate-400 uppercase">พลังงานที่ควรได้รับ</p>
+                                <p class="text-xl font-extrabold text-slate-800 mt-1" id="target-cal">1,650 <span class="text-xs font-normal">kcal</span></p>
+                                <p class="text-4xs text-slate-400 mt-1" id="cal-formula">30 kcal/กก./วัน</p>
+                            </div>
+                            <div class="bg-teal-50/60 p-3.5 rounded-xl border border-teal-100/50">
+                                <p class="text-3xs font-bold text-teal-600 uppercase">โควตาโปรตีนต่อวัน</p>
+                                <p class="text-xl font-extrabold text-teal-700 mt-1" id="target-protein">33.0 <span class="text-xs font-normal">กรัม</span></p>
+                                <p class="text-4xs text-teal-500 mt-1" id="protein-formula">ไตเสื่อมคุมเข้มงวด 0.6g/กก.</p>
+                            </div>
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                                <p class="text-3xs font-bold text-slate-400 uppercase">จำกัดโซเดียม</p>
+                                <p class="text-xl font-extrabold text-slate-800 mt-1" id="target-sodium">&lt; 2,000 <span class="text-xs font-normal">มก.</span></p>
+                                <p class="text-4xs text-slate-400 mt-1">งดของเค็ม ผงชูรส ของแปรรูป</p>
+                            </div>
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                                <p class="text-3xs font-bold text-slate-400 uppercase">จำกัดโพแทสเซียม</p>
+                                <p class="text-xl font-extrabold text-slate-800 mt-1" id="target-potassium">&lt; 1,500 <span class="text-xs font-normal">มก.</span></p>
+                                <p class="text-4xs text-slate-400 mt-1">เลี่ยงผักผลไม้สีเข้มจัด/สีเหลือง</p>
+                            </div>
+                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
+                                <p class="text-3xs font-bold text-slate-400 uppercase">จำกัดฟอสฟอรัส</p>
+                                <p class="text-xl font-extrabold text-slate-800 mt-1" id="target-phosphorus">&lt; 800 <span class="text-xs font-normal">มก.</span></p>
+                                <p class="text-4xs text-slate-400 mt-1">เลี่ยงนม ไข่แดง ถั่ว เบเกอรี่</p>
+                            </div>
+                            <div class="bg-sky-50 p-3.5 rounded-xl border border-sky-100">
+                                <p class="text-3xs font-bold text-sky-600 uppercase">ควบคุมน้ำดื่มต่อวัน</p>
+                                <p class="text-xl font-extrabold text-sky-700 mt-1" id="target-water">~1,000 <span class="text-xs font-normal">มล.</span></p>
+                                <p class="text-4xs text-sky-500 mt-1" id="water-formula">คำนวณเฉพาะบุคคลกันตัวบวม</p>
+                            </div>
+                        </div>
+
+                        <!-- Intelligent Safety Warnings from Lab inputs -->
+                        <div id="lab-alerts-container" class="hidden space-y-2 mb-4">
+                            <!-- JS injected lab alerts -->
+                        </div>
+
+                        <!-- Fluid Level Interactive Tracker -->
+                        <div class="bg-sky-50/50 p-5 rounded-xl border border-sky-100 flex flex-col justify-between">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-sm flex items-center mb-1">
+                                    <i class="fa-solid fa-droplet text-sky-500 mr-2"></i> บันทึกการบริโภคน้ำวันนี้ (น้ำดื่ม + ซุป)
+                                </h3>
+                                <p class="text-3xs text-slate-500 mb-3">การควบคุมน้ำเข้า-ออกเพื่อป้องกันน้ำท่วมปอดและอาการบวมน้ำในผู้ป่วยไตวาย</p>
+                                <div class="flex items-center space-x-3 mb-3">
+                                    <span class="text-2xl font-bold text-sky-800" id="water-tracker-value">0</span>
+                                    <span class="text-slate-400 text-sm">/ <span id="water-tracker-target">1000</span> มล.</span>
+                                </div>
+                                <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden mb-4">
+                                    <div id="water-progress-bar" class="bg-sky-500 h-full rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button onclick="addWater(150)" class="flex-1 bg-sky-100 hover:bg-sky-200 text-sky-700 font-semibold py-1.5 rounded-lg text-xs transition-all">
+                                    <i class="fa-solid fa-plus mr-1"></i> แก้วเล็ก (150 มล.)
+                                </button>
+                                <button onclick="addWater(250)" class="flex-1 bg-sky-200 hover:bg-sky-300 text-sky-800 font-semibold py-1.5 rounded-lg text-xs transition-all">
+                                    <i class="fa-solid fa-plus mr-1"></i> แก้วใหญ่ (250 มล.)
+                                </button>
+                                <button onclick="resetWater()" class="px-3 py-1.5 bg-slate-100 text-slate-400 rounded-lg hover:bg-slate-200 transition-all text-xs" title="รีเซ็ตค่าน้ำ">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- TAB 2: INTERACTIVE 7-DAY MEAL PLANNER -->
+        <section id="tab-planner" class="tab-content hidden space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-800">ตารางอาหารไตวายเรื้อรัง 7 วัน (จันทร์ - อาทิตย์)</h2>
+                    <p class="text-xs text-slate-500">เมนูจำลองตามระดับและระยะไตที่เลือก เพื่อให้สารอาหารจำกัดไม่เกินค่าวิกฤต</p>
+                </div>
+                <!-- Day Select Button Pill Group -->
+                <div class="flex items-center space-x-1.5 bg-white p-1 rounded-xl border border-slate-200 overflow-x-auto self-start">
+                    <button onclick="changePlannerDay('mon')" id="btn-day-mon" class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-teal-600 text-white transition-all">จ.</button>
+                    <button onclick="changePlannerDay('tue')" id="btn-day-tue" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-50 transition-all">อ.</button>
+                    <button onclick="changePlannerDay('wed')" id="btn-day-wed" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-50 transition-all">พ.</button>
+                    <button onclick="changePlannerDay('thu')" id="btn-day-thu" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-50 transition-all">พฤ.</button>
+                    <button onclick="changePlannerDay('fri')" id="btn-day-fri" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-50 transition-all">ศ.</button>
+                    <button onclick="changePlannerDay('sat')" id="btn-day-sat" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-50 transition-all">ส.</button>
+                    <button onclick="changePlannerDay('sun')" id="btn-day-sun" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-50 transition-all">อา.</button>
+                </div>
+            </div>
+
+            <!-- Daily Planner Block View -->
+            <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
+                    <div>
+                        <span class="text-xs font-bold text-teal-600 uppercase tracking-widest" id="plan-current-day-label">MONDAY</span>
+                        <h3 class="text-lg font-bold text-slate-800" id="plan-current-day-title">รายการอาหารวันจันทร์</h3>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xs text-slate-400 block font-medium">รวมพลังงานและโปรตีนมื้อวันนี้</span>
+                        <span class="text-base font-bold text-teal-600" id="plan-day-totals">~ 1,650 kcal | โปรตีน 33.0g</span>
+                    </div>
+                </div>
+
+                <!-- Three main meals structured for CKD patients -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    
+                    <!-- Breakfast Card -->
+                    <div class="border border-slate-100 rounded-xl p-4 flex flex-col justify-between hover:border-teal-200 hover:bg-teal-50/10 transition-all">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-3xs font-bold text-amber-600 uppercase bg-amber-50 px-2 py-1 rounded-md"><i class="fa-solid fa-mug-saucer mr-1"></i> มื้อเช้า</span>
+                                <span class="text-xs font-bold text-slate-700" id="pb-kcal">~ 400 kcal</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm sm:text-base mb-1" id="pb-title">ข้าวต้มขาวต้มกับไข่ขาวต้มสับ</h4>
+                            <p class="text-xs text-slate-500 line-clamp-2" id="pb-desc">ใช้ไข่ขาวเพื่อหลีกเลี่ยงฟอสฟอรัสในไข่แดง และใช้ข้าวขาวเพื่อคุมปริมาณฟอสฟอรัส</p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-3xs text-slate-400">
+                            <span id="pb-protein">โปรตีน: 8 กรัม</span>
+                            <button onclick="viewRecipeDetailByCode('pb')" class="text-teal-600 hover:underline font-bold">วิธีปรุง <i class="fa-solid fa-chevron-right ml-0.5"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Lunch Card -->
+                    <div class="border border-slate-100 rounded-xl p-4 flex flex-col justify-between hover:border-teal-200 hover:bg-teal-50/10 transition-all">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-3xs font-bold text-teal-600 uppercase bg-teal-50 px-2 py-1 rounded-md"><i class="fa-solid fa-sun mr-1"></i> มื้อกลางวัน</span>
+                                <span class="text-xs font-bold text-slate-700" id="pl-kcal">~ 600 kcal</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm sm:text-base mb-1" id="pl-title">ผัดวุ้นเส้นใส่ไข่ขาวและกะหล่ำปลี</h4>
+                            <p class="text-xs text-slate-500 line-clamp-2" id="pl-desc">วุ้นเส้นจัดเป็นแป้งปลอดโปรตีน ช่วยเพิ่มพลังงานโดยไม่สร้างภาระให้ไต</p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-3xs text-slate-400">
+                            <span id="pl-protein">โปรตีน: 10 กรัม</span>
+                            <button onclick="viewRecipeDetailByCode('pl')" class="text-teal-600 hover:underline font-bold">วิธีปรุง <i class="fa-solid fa-chevron-right ml-0.5"></i></button>
+                        </div>
+                    </div>
+
+                    <!-- Dinner Card -->
+                    <div class="border border-slate-100 rounded-xl p-4 flex flex-col justify-between hover:border-teal-200 hover:bg-teal-50/10 transition-all">
+                        <div>
+                            <div class="flex items-center justify-between mb-3">
+                                <span class="text-3xs font-bold text-indigo-600 uppercase bg-indigo-50 px-2 py-1 rounded-md"><i class="fa-solid fa-moon mr-1"></i> มื้อเย็น</span>
+                                <span class="text-xs font-bold text-slate-700" id="pd-kcal">~ 550 kcal</span>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-sm sm:text-base mb-1" id="pd-title">ข้าวสวยเม็ดขาวเคียงปลากะพงนึ่งผักกาดขาว</h4>
+                            <p class="text-xs text-slate-500 line-clamp-2" id="pd-desc">เนื้อปลามีโปรตีนคุณภาพสูง ย่อยง่าย และคุมปริมาณพริกเครื่องปรุงโซเดียมต่ำ</p>
+                        </div>
+                        <div class="mt-4 pt-3 border-t border-slate-50 flex items-center justify-between text-3xs text-slate-400">
+                            <span id="pd-protein">โปรตีน: 15 กรัม</span>
+                            <button onclick="viewRecipeDetailByCode('pd')" class="text-teal-600 hover:underline font-bold">วิธีปรุง <i class="fa-solid fa-chevron-right ml-0.5"></i></button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Renal Dessert/Snack Recommendation -->
+                <div class="mt-6 bg-amber-50/60 p-4 rounded-xl border border-amber-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 bg-amber-100 text-amber-700 rounded-lg flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-cookie-bite"></i>
+                        </div>
+                        <div>
+                            <h4 class="text-xs font-bold text-amber-800">แนะนำของหวานเพิ่มพลังงาน (แป้งปลอดโปรตีน) หากแคลอรีไม่ถึง</h4>
+                            <p class="text-2xs text-slate-600 mt-0.5" id="plan-snack-recommend">ขนมสาคูเปียก หรือ ซ่าหริ่มกะทิสดอ่อนหวาน (ช่วยเติมพลังงานคาร์บสะอาด โดยไม่เพิ่มไนโตรเจนของเสียในกระแสเลือด)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- TAB 3: KIDNEY-SAFE RECIPES DIRECTORY -->
+        <section id="tab-recipes" class="tab-content hidden space-y-6">
+            <!-- Search & Filter Area -->
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 rounded-xl border border-slate-100 shadow-2xs">
+                <div class="relative w-full md:max-w-sm">
+                    <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                    <input type="text" id="recipe-search" oninput="searchRecipes()" placeholder="ค้นหาสูตรอาหารโรคไต (เช่น ปลานิล, ไข่ขาว)" class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500">
+                </div>
+                <div class="flex space-x-2 overflow-x-auto w-full md:w-auto">
+                    <button onclick="filterRecipes('all')" class="recipe-filter-btn px-4 py-2 text-xs font-semibold rounded-lg bg-teal-600 text-white whitespace-nowrap">ทั้งหมด</button>
+                    <button onclick="filterRecipes('low-prot')" class="recipe-filter-btn px-4 py-2 text-xs font-semibold rounded-lg text-slate-600 bg-slate-50 hover:bg-slate-100 whitespace-nowrap">ไตระยะ 3-5 (โปรตีนต่ำ)</button>
+                    <button onclick="filterRecipes('dialysis-prot')" class="recipe-filter-btn px-4 py-2 text-xs font-semibold rounded-lg text-slate-600 bg-slate-50 hover:bg-slate-100 whitespace-nowrap">ผู้ล้าง/ฟอกไต (เน้นโปรตีน)</button>
+                </div>
+            </div>
+
+            <!-- Recipes Grid -->
+            <div id="recipes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Javascript will inject recipe cards here -->
+            </div>
+        </section>
+
+        <!-- TAB 4: EDUCATIONAL GUIDE / CHEATSHEET -->
+        <section id="tab-guide" class="tab-content hidden space-y-6">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- Left: Sodium, Potassium, Phosphorus Explainer -->
+                <div class="lg:col-span-2 space-y-6">
+                    
+                    <!-- Sodium (โซเดียม) Section -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 relative overflow-hidden">
+                        <div class="flex items-center space-x-3 border-b border-slate-100 pb-3 mb-4">
+                            <span class="w-8 h-8 rounded-lg bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm">Na</span>
+                            <h3 class="font-bold text-slate-800 text-base">การจำกัดโซเดียม (Sodium) ในผู้ป่วยโรคไต</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                            การได้รับโซเดียมมากเกินไปทำให้เกิดอาการน้ำคั่ง ความดันโลหิตสูง และไตทำงานหนักจนวายเฉียบพลัน ปริมาณที่แนะนำคือไม่เกิน <strong>2,000 มิลลิกรัมต่อวัน</strong> (เทียบเท่าเกลือป่นประมาณ 1 ช้อนชา)
+                        </p>
+                        <div class="grid grid-cols-2 gap-4 text-xs">
+                            <div class="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                                <h4 class="font-bold text-emerald-800 mb-1.5"><i class="fa-solid fa-circle-check"></i> อาหารแนะนำ</h4>
+                                <ul class="list-disc list-inside text-slate-600 space-y-1">
+                                    <li>ใช้น้ำมะนาวแท้, พริกสด, ขิง ช่วยแต่งรส</li>
+                                    <li>ใช้เครื่องปรุงสูตรโซเดียมต่ำในปริมาณน้อย</li>
+                                    <li>ทำอาหารสดใหม่ ทานวัตถุดิบไม่ผ่านการแปรรูป</li>
+                                </ul>
+                            </div>
+                            <div class="bg-rose-50/50 p-3 rounded-lg border border-rose-100">
+                                <h4 class="font-bold text-rose-800 mb-1.5"><i class="fa-solid fa-circle-xmark"></i> ควรหลีกเลี่ยงอย่างเด็ดขาด</h4>
+                                <ul class="list-disc list-inside text-slate-600 space-y-1">
+                                    <li>ผงชูรส, ผงปรุงรสก้อน, ซอสปรุงรสเข้มข้น</li>
+                                    <li>บะหมี่กึ่งสำเร็จรูป, ปลากระป๋อง, ไส้กรอก</li>
+                                    <li>ขนมขบเคี้ยว, อาหารหมักดองเค็ม</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Potassium (โพแทสเซียม) Section -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 relative overflow-hidden">
+                        <div class="flex items-center space-x-3 border-b border-slate-100 pb-3 mb-4">
+                            <span class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-sm">K</span>
+                            <h3 class="font-bold text-slate-800 text-base">การควบคุมโพแทสเซียม (Potassium)</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                            หากมีโพแทสเซียมในเลือดสูงเกินเกณฑ์จะส่งผลอันตรายต่อการเต้นของหัวใจ จนทำให้หัวใจหยุดเต้นได้ มักเกิดในผู้ป่วยโรคไตระยะ 3-5 ที่การขับโพแทสเซียมลดลง
+                        </p>
+                        <div class="grid grid-cols-2 gap-4 text-xs">
+                            <div class="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                                <h4 class="font-bold text-emerald-800 mb-1.5"><i class="fa-solid fa-circle-check"></i> ผัก/ผลไม้ โพแทสเซียมต่ำ-ปานกลาง</h4>
+                                <ul class="list-disc list-inside text-slate-600 space-y-1">
+                                    <li>ผักกาดขาว, กะหล่ำปลี, มะเขือยาว, แตงกวา</li>
+                                    <li>ฝรั่ง, แอปเปิ้ลเขียว, มะม่วงดิบ, สับปะรด</li>
+                                    <li>*การนำผักไปต้มสุกแล้วคั้นน้ำออกช่วยลด K ลงได้ 30-50%</li>
+                                </ul>
+                            </div>
+                            <div class="bg-rose-50/50 p-3 rounded-lg border border-rose-100">
+                                <h4 class="font-bold text-rose-800 mb-1.5"><i class="fa-solid fa-circle-xmark"></i> ผัก/ผลไม้ โพแทสเซียมสูง</h4>
+                                <ul class="list-disc list-inside text-slate-600 space-y-1">
+                                    <li>กล้วย, ส้ม, ทุเรียน, ขนุน, อะโวคาโด</li>
+                                    <li>ฟักทอง, แครอท, มะเขือเทศ, บรอกโคลี</li>
+                                    <li>น้ำลูกพรุน, ผักโขมสด, มันเทศ</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Phosphorus (ฟอสฟอรัส) Section -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 relative overflow-hidden">
+                        <div class="flex items-center space-x-3 border-b border-slate-100 pb-3 mb-4">
+                            <span class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">P</span>
+                            <h3 class="font-bold text-slate-800 text-base">การคุมระดับฟอสฟอรัส (Phosphorus)</h3>
+                        </div>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                            ฟอสฟอรัสสูงในโรคไตจะไปจับกับแคลเซียม ทำให้กระดูกเปราะ พรุน หักง่าย หลอดเลือดแดงแข็ง และมีอาการคันตามผิวหนังมาก
+                        </p>
+                        <div class="grid grid-cols-2 gap-4 text-xs">
+                            <div class="bg-emerald-50/50 p-3 rounded-lg border border-emerald-100">
+                                <h4 class="font-bold text-emerald-800 mb-1.5"><i class="fa-solid fa-circle-check"></i> ทางเลือกฟอสฟอรัสต่ำ</h4>
+                                <ul class="list-disc list-inside text-slate-600 space-y-1">
+                                    <li>ไข่ขาว (แหล่งโปรตีนบริสุทธิ์ไม่มีฟอสฟอรัส)</li>
+                                    <li>ข้าวขาว, ขนมปังขาว (หลีกเลี่ยงโฮลวีต)</li>
+                                    <li>น้ำเก๊กฮวย, น้ำกระเจี๊ยบต้มเอง</li>
+                                </ul>
+                            </div>
+                            <div class="bg-rose-50/50 p-3 rounded-lg border border-rose-100">
+                                <h4 class="font-bold text-rose-800 mb-1.5"><i class="fa-solid fa-circle-xmark"></i> แหล่งฟอสฟอรัสสูงมาก</h4>
+                                <ul class="list-disc list-inside text-slate-600 space-y-1">
+                                    <li>ไข่แดง, ผลิตภัณฑ์จากนมทุกชนิด (ชีส, นมสด)</li>
+                                    <li>ถั่วเมล็ดแห้งทุกชนิด, แป้งโฮลวีต</li>
+                                    <li>เครื่องดื่มสีเข้ม (กาแฟ, โกโก้, โคล่า, เบียร์)</li>
+                                    <li>เบเกอรี่ที่มีผงฟู, อาหารกระป๋องทุกประเภท</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Right Side: Star Fruit Danger & Energy Source Quick Tips -->
+                <div class="space-y-6">
+                    
+                    <!-- STRICT TOXIC WARNING FOR CKD -->
+                    <div class="bg-rose-900 text-rose-100 p-6 rounded-2xl shadow-md border border-rose-800">
+                        <div class="flex items-center space-x-2.5 mb-3">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-400 text-2xl animate-bounce"></i>
+                            <h3 class="font-extrabold text-sm uppercase tracking-wide">อันตรายห้ามรับประทาน: มะเฟือง!</h3>
+                        </div>
+                        <p class="text-xs text-rose-200 leading-relaxed">
+                            <strong>มะเฟือง (Star Fruit)</strong> มีกรดออกซาลิก (Oxalic Acid) และสารพิษที่เรียกว่า คารัมโบลกซิน (Caramboxin) สูงมาก ในผู้ป่วยโรคไตที่ไตไม่สามารถขับออกได้ สารนี้จะไปสะสมทำลายสมองและระบบประสาท ทำให้สะอึก ชัก หมดสติ และนำไปสู่ภาวะไตวายเฉียบพลันขั้นรุนแรงจนเสียชีวิตได้
+                        </p>
+                    </div>
+
+                    <!-- Clean Protein-Free Energy Sources (แป้งปลอดโปรตีน) -->
+                    <div class="bg-teal-50 p-6 rounded-2xl border border-teal-100">
+                        <h3 class="font-bold text-teal-800 text-sm flex items-center mb-3">
+                            <i class="fa-solid fa-wheat-awn text-teal-600 mr-2"></i> แป้งปลอดโปรตีนคืออะไร?
+                        </h3>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                            ในผู้ป่วยโรคไตระยะ 3-5 ที่ต้องคุมโปรตีนเข้มงวดเพื่อประคับประคองไต หากทานอาหารน้อยเกินไปร่างกายจะสลายกล้ามเนื้อมาใช้เป็นพลังงาน ทำให้น้ำหนักลดตัวผอมลีบ (Malnutrition) และเพิ่มของเสียในเลือด
+                        </p>
+                        <p class="text-xs text-slate-600 leading-relaxed mb-4">
+                            ทางออกคือการทาน <strong>"แป้งปลอดโปรตีน"</strong> เพื่อเพิ่มพลังงานแคลอรี โดยไม่ทำลายไต:
+                        </p>
+                        <div class="bg-white p-3.5 rounded-xl border border-teal-100/60 space-y-2 text-xs">
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-check text-teal-600"></i>
+                                <span class="font-medium text-slate-700">วุ้นเส้น / เส้นเซี่ยงไฮ้ใส</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-check text-teal-600"></i>
+                                <span class="font-medium text-slate-700">สาคูเปียกต้มหวานอ่อน</span>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <i class="fa-solid fa-check text-teal-600"></i>
+                                <span class="font-medium text-slate-700">แป้งมัน / ลอดช่องสิงคโปร์น้ำกะทิเจือจาง</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- RECIPE MODAL DETAIL DIALOG (Hidden by default) -->
+    <div id="recipe-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center hidden p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col shadow-2xl relative">
+            <button onclick="closeRecipeModal()" class="absolute right-4 top-4 text-slate-400 hover:text-slate-600 bg-slate-100 rounded-full w-8 h-8 flex items-center justify-center transition-all">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="p-6 md:p-8" id="modal-content">
+                <!-- JS will inject complete recipes detail -->
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-900 text-slate-400 py-12 border-t border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center md:text-left">
+            <div class="flex flex-col md:flex-row justify-between items-center border-b border-slate-800 pb-8 mb-8 gap-6">
+                <div>
+                    <div class="flex items-center justify-center md:justify-start space-x-2 text-white mb-2">
+                        <i class="fa-solid fa-kidney text-2xl text-teal-400"></i>
+                        <span class="text-xl font-bold tracking-wide">KidneyDiet</span>
+                    </div>
+                    <p class="text-xs text-slate-500 max-w-md">ระบบประเมินโภชนบำบัดสำหรับโรคไตวายเรื้อรัง มุ่งส่งเสริมคุณภาพชีวิตผู้ป่วยผ่านสูตรอาหารที่คุมแร่ธาตุอย่างเข้มงวดถูกต้องตามหลักอายุรกรรม</p>
+                </div>
+                <div class="flex space-x-4">
+                    <a href="#" class="w-9 h-9 bg-slate-800 rounded-full flex items-center justify-center hover:bg-teal-600 hover:text-white transition-colors text-slate-300">
+                        <i class="fa-brands fa-facebook-f text-sm"></i>
+                    </a>
+                    <a href="#" class="w-9 h-9 bg-slate-800 rounded-full flex items-center justify-center hover:bg-teal-600 hover:text-white transition-colors text-slate-300">
+                        <i class="fa-brands fa-line text-sm"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="flex flex-col md:flex-row justify-between text-2xs text-slate-600 gap-4">
+                <p>&copy; 2026 KidneyDiet Co. สงวนลิขสิทธิ์. สูตรและโปรแกรมนี้อ้างอิงจากแนวทางดูแลผู้ป่วยโรคไตวายของสมาคมโรคไตแห่งประเทศไทย</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT APPLICATION CODE -->
+    <script>
+        // --- 1. CORE RECIPE & CLINICAL MEAL DATABASE ---
+        const recipesDatabase = [
+            {
+                id: "rec_1",
+                code: "pb", // used in planner
+                title: "ข้าวต้มไข่ขาวบดกับขิงสดหอม",
+                cal: 380,
+                protein: 8,
+                sodium: 180,
+                potassium: 120,
+                phosphorus: 35,
+                stageType: "low-prot", // Suitable for pre-dialysis
+                tags: ["มื้อเช้า", "ฟอสฟอรัสต่ำสุดขีด", "โซเดียมต่ำ"],
+                ingredients: [
+                    "ปลายข้าวหอมมะลิ (ขาว) 1 ทัพพี",
+                    "ไข่ขาวพาสเจอร์ไรซ์ต้มสุกสับละเอียด 2 ฟอง (ปราศจากไข่แดง)",
+                    "ขิงแก่ซอยฝอย 1 ช้อนชา (ช่วยย่อยอาหาร)",
+                    "ซีอิ๊วขาวลดโซเดียมพิเศษ 1/2 ช้อนชา",
+                    "น้ำต้มสุก 1.5 ถ้วย"
+                ],
+                instructions: "ต้มปลายข้าวขาวจนสุกแตกเมล็ดข้นนุ่ม ใส่ขิงแก่และไข่ขาวสับลงไปคนให้เข้ากัน ยกลงเสิร์ฟร้อนๆ เหยาะซีอิ๊วขาวลดโซเดียมเพียงเล็กน้อยเท่านั้น"
+            },
+            {
+                id: "rec_2",
+                code: "pl",
+                title: "ผัดวุ้นเส้นใส่ไข่ขาวและกะหล่ำปลีลวกบีบน้ำ",
+                cal: 580,
+                protein: 9,
+                sodium: 250,
+                potassium: 140,
+                phosphorus: 40,
+                stageType: "low-prot",
+                tags: ["มื้อกลางวัน", "แป้งปลอดโปรตีน", "โพแทสเซียมต่ำ"],
+                ingredients: [
+                    "วุ้นเส้นแห้งแช่น้ำสลัดน้ำออก 100 กรัม",
+                    "ไข่ขาวเหลวพาสเจอร์ไรซ์ 2 ฟอง",
+                    "กะหล่ำปลีซอยฝอยต้มสุกและบีบน้ำออก 1 ถ้วย",
+                    "กระเทียมจีนสับละเอียด 1 กลีบ",
+                    "น้ำมันรำข้าว 1 ช้อนชา",
+                    "ซอสปรุงรสโซเดียมต่ำ 1 ช้อนชา"
+                ],
+                instructions: "เคล็ดลับสำคัญคือนำกะหล่ำปลีไปต้มและบีบน้ำทิ้งเพื่อขจัดโพแทสเซียม จากนั้นตั้งกระทะผัดกระเทียมกับน้ำมันเล็กน้อย ใส่ไข่ขาวลงไปผัดกวนเกือบสุก ใส่วุ้นเส้นและกะหล่ำปลี ปรุงรสคลุกเคล้าจนเข้ากัน"
+            },
+            {
+                id: "rec_3",
+                code: "pd",
+                title: "ข้าวสวยปลากะพงนึ่งผักกาดขาวบีบน้ำ",
+                cal: 520,
+                protein: 16,
+                sodium: 290,
+                potassium: 180,
+                phosphorus: 120,
+                stageType: "low-prot",
+                tags: ["มื้อเย็น", "โปรตีนคุณภาพสูง", "คุมโพแทสเซียม"],
+                ingredients: [
+                    "เนื้อปลากะพงสดขาวไร้หนัง 80 กรัม",
+                    "ผักกาดขาวใบอ่อนต้มบีบน้ำทิ้ง 100 กรัม",
+                    "ข้าวหอมมะลิขาวหุงสุก 1 ทัพพี",
+                    "น้ำมะนาวคั้นสด 1/2 ช้อนชา",
+                    "พริกขี้หนูสวนซอยละเอียด 1 เม็ด (แต่งรสแก้เลี่ยน)"
+                ],
+                instructions: "นำปลากะพงและผักกาดขาวไปนึ่งรวมกันจนสุกดี ปลากะพงเป็นแหล่งโปรตีนชั้นเลิศที่มีกรดอะมิโนครบถ้วนและของเสียน้อย ราดพริกมะนาวเจือจางคู่กับข้าวสวยร้อนๆ"
+            },
+            {
+                id: "rec_4",
+                code: "dial_1",
+                title: "ข้าวสวยต้มยำแห้งปลานิลคู่ไข่ขาวฟองโต",
+                cal: 620,
+                protein: 26,
+                sodium: 310,
+                potassium: 210,
+                phosphorus: 155,
+                stageType: "dialysis-prot", // High protein for dialysis patients
+                tags: ["ผู้ฟอกไต", "เน้นโปรตีนทดแทน", "หอมกลิ่นสมุนไพร"],
+                ingredients: [
+                    "เนื้อปลานิลสดหั่นชิ้น 100 กรัม",
+                    "ไข่ขาวต้มสุกหั่นเต๋า 2 ฟอง",
+                    "ตะไคร้ ใบมะกรูด หอมแดงซอย",
+                    "น้ำมะนาวแท้ 1 ช้อนโต๊ะ",
+                    "ข้าวสวยขาวร้อนๆ 1.5 ทัพพี"
+                ],
+                instructions: "รวนปลาและไข่ขาวสุกกับข่า ตะไคร้ ใบมะกรูดในกระทะไร้น้ำมันจนหอมฟุ้ง บีบมะนาวแต่งรสจัดจ้านโดยไม่ใช้เกลือและผงชูรส เสิร์ฟกับข้าวสวย"
+            },
+            {
+                id: "rec_5",
+                code: "dial_2",
+                title: "บะหมี่ขาวราดหน้ากุ้งสดเด้งกับผักกาดขาวต้มสุก",
+                cal: 590,
+                protein: 24,
+                sodium: 340,
+                potassium: 160,
+                phosphorus: 140,
+                stageType: "dialysis-prot",
+                tags: ["มื้อกลางวัน", "โปรตีนดี", "คุมโซเดียม"],
+                ingredients: [
+                    "เส้นหมี่ขาวลวกน้ำทิ้ง 1 ทัพพี",
+                    "กุ้งขาวปอกเปลือกผ่าหลัง 4 ตัว",
+                    "แป้งมันสำปะหลัง 1 ช้อนโต๊ะ (ช่วยเติมพลังงาน)",
+                    "ผักกาดขาวลวกหั่นท่อน 1 ถ้วย",
+                    "เต้าเจี้ยวลดโซเดียมพิเศษ 1/2 ช้อนชา"
+                ],
+                instructions: "ผัดกุ้งพอตึงตัวทำน้ำราดหน้าข้นๆ จากแป้งมันและเต้าเจี้ยวลดโซเดียม เสิร์ฟราดลงบนเส้นหมี่ขาวและผักกาดขาวลวกอร่อยอิ่มสบายท้อง"
+            }
+        ];
+
+        // 7-Day structured meals database (Dynamic change according to CKD stages)
+        const weeklyPlannersByStage = {
+            low: { // Stage 3-5 Pre-dialysis (Strict low protein)
+                mon: { pb: "rec_1", pl: "rec_2", pd: "rec_3", kcal: 1480, prot: 33 },
+                tue: { pb: "rec_1", pl: "rec_2", pd: "rec_3", kcal: 1480, prot: 33 },
+                wed: { pb: "rec_1", pl: "rec_2", pd: "rec_3", kcal: 1480, prot: 33 },
+                thu: { pb: "rec_1", pl: "rec_2", pd: "rec_3", kcal: 1480, prot: 33 },
+                fri: { pb: "rec_1", pl: "rec_2", pd: "rec_3", kcal: 1480, prot: 33 },
+                sat: { pb: "rec_1", pl: "rec_2", pd: "rec_3", kcal: 1480, prot: 33 },
+                sun: { pb: "rec_1", pl: "rec_2", pd: "rec_3", kcal: 1480, prot: 33 }
+            },
+            high: { // Dialysis Stage (Hemodialysis/Peritoneal - High protein requirement)
+                mon: { pb: "rec_1", pl: "rec_5", pd: "rec_4", kcal: 1820, prot: 58 },
+                tue: { pb: "rec_1", pl: "rec_5", pd: "rec_4", kcal: 1820, prot: 58 },
+                wed: { pb: "rec_1", pl: "rec_5", pd: "rec_4", kcal: 1820, prot: 58 },
+                thu: { pb: "rec_1", pl: "rec_5", pd: "rec_4", kcal: 1820, prot: 58 },
+                fri: { pb: "rec_1", pl: "rec_5", pd: "rec_4", kcal: 1820, prot: 58 },
+                sat: { pb: "rec_1", pl: "rec_5", pd: "rec_4", kcal: 1820, prot: 58 },
+                sun: { pb: "rec_1", pl: "rec_5", pd: "rec_4", kcal: 1820, prot: 58 }
+            }
+        };
+
+        const dayNamesTh = {
+            mon: "วันจันทร์",
+            tue: "วันอังคาร",
+            wed: "วันพุธ",
+            thu: "วันพฤหัสบดี",
+            fri: "วันศุกร์",
+            sat: "วันเสาร์",
+            sun: "วันอาทิตย์"
+        };
+
+        // --- 2. STATE VARIABLES ---
+        let activeTab = "calculator";
+        let selectedStage = "predialysis"; 
+        let activePlannerDay = "mon";
+        let userIBW = 55.0;
+        let calculatedWaterTarget = 1000;
+        let currentWaterIntake = 0;
+
+        // --- 3. APPLICATION INITIALIZATION ---
+        window.addEventListener('DOMContentLoaded', () => {
+            initApp();
+        });
+
+        function initApp() {
+            // Trigger target generation based on standard default values
+            calculateRenalTargets(null);
+            renderRecipesGrid();
+            updatePlannerUI();
+        }
+
+        // --- 4. TAB NAVIGATION ENGINE ---
+        function switchTab(tabId) {
+            activeTab = tabId;
+            
+            // Hide all tab containers
+            document.querySelectorAll('.tab-content').forEach(element => {
+                element.classList.add('hidden');
+            });
+            // Show active tab
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+
+            // Update Navigation Button styles (Desktop)
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.className = "nav-btn px-3 py-2 rounded-lg text-sm font-medium text-teal-100 hover:bg-teal-600 transition-all";
+            });
+            const activeDeskBtn = document.getElementById(`nav-${tabId}`);
+            if (activeDeskBtn) {
+                activeDeskBtn.className = "nav-btn px-3 py-2 rounded-lg text-sm font-medium bg-teal-800 text-white transition-all";
+            }
+
+            // Update Mobile Nav styling
+            document.querySelectorAll('[id^="mob-nav-"]').forEach(btn => {
+                btn.classList.remove('text-teal-600');
+                btn.classList.add('text-slate-500');
+            });
+            const activeMobBtn = document.getElementById(`mob-nav-${tabId}`);
+            if (activeMobBtn) {
+                activeMobBtn.classList.add('text-teal-600');
+            }
+        }
+
+        function toggleGender(gender) {
+            const maleLabel = document.getElementById('label-gender-male');
+            const femaleLabel = document.getElementById('label-gender-female');
+            
+            if (gender === 'male') {
+                maleLabel.className = "border-2 border-teal-500 bg-teal-50/40 rounded-xl p-2.5 flex items-center justify-center cursor-pointer transition-all text-center";
+                femaleLabel.className = "border border-slate-200 rounded-xl p-2.5 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-all text-center";
+            } else {
+                femaleLabel.className = "border-2 border-teal-500 bg-teal-50/40 rounded-xl p-2.5 flex items-center justify-center cursor-pointer transition-all text-center";
+                maleLabel.className = "border border-slate-200 rounded-xl p-2.5 flex items-center justify-center cursor-pointer hover:bg-slate-50 transition-all text-center";
+            }
+        }
+
+        function onStageChange() {
+            selectedStage = document.getElementById('input-ckd-stage').value;
+        }
+
+        // --- 5. CLINICAL NUTRITION CALCULATIONS ---
+        function calculateRenalTargets(event) {
+            if (event) event.preventDefault();
+
+            const gender = document.querySelector('input[name="gender"]:checked').value;
+            const ckdStage = document.getElementById('input-ckd-stage').value;
+            const age = parseFloat(document.getElementById('input-age').value);
+            const height = parseFloat(document.getElementById('input-height').value);
+            const weight = parseFloat(document.getElementById('input-weight').value);
+            
+            // Lab inputs
+            const labK = parseFloat(document.getElementById('lab-potassium').value);
+            const labP = parseFloat(document.getElementById('lab-phosphorus').value);
+
+            // 1. Calculate Ideal Body Weight (IBW) - Crucial in Nephrology nutrition
+            let ibw = 50;
+            if (gender === 'male') {
+                ibw = height - 100;
+            } else {
+                ibw = height - 105;
+            }
+            userIBW = ibw;
+            document.getElementById('val-ibw').textContent = `${ibw.toFixed(1)} กก.`;
+
+            // 2. Calories targets (30-35 kcal/kg IBW/day)
+            let kcalTarget = Math.round(ibw * 30);
+            if (age < 60) {
+                kcalTarget = Math.round(ibw * 35);
+            }
+            document.getElementById('target-cal').innerHTML = `${kcalTarget.toLocaleString()} <span class="text-xs font-normal">kcal</span>`;
+            document.getElementById('cal-formula').textContent = `${age < 60 ? '35' : '30'} kcal/กก./วัน`;
+
+            // 3. Protein Targets (Highly critical depending on stage)
+            let proteinTarget = 0;
+            let proteinForm = "";
+            let stageBadgeText = "";
+
+            if (ckdStage === 'early') {
+                proteinTarget = ibw * 0.8;
+                proteinForm = "คุมเบาบาง 0.8g/กก./วัน";
+                stageBadgeText = "โรคไตระยะ 1-2";
+            } else if (ckdStage === 'predialysis') {
+                proteinTarget = ibw * 0.6;
+                proteinForm = "คุมเข้มงวด 0.6g/กก./วัน";
+                stageBadgeText = "โรคไตระยะ 3-5 (ก่อนฟอก)";
+            } else if (ckdStage === 'hemodialysis') {
+                proteinTarget = ibw * 1.2;
+                proteinForm = "ต้องการเพิ่มพิเศษ 1.2g/กก.";
+                stageBadgeText = "ฟอกเลือดทางไตเทียม";
+            } else if (ckdStage === 'peritoneal') {
+                proteinTarget = ibw * 1.3;
+                proteinForm = "ต้องการเพิ่มพิเศษ 1.3g/กก.";
+                stageBadgeText = "ล้างไตทางช่องท้อง";
+            }
+
+            document.getElementById('target-protein').innerHTML = `${proteinTarget.toFixed(1)} <span class="text-xs font-normal">กรัม</span>`;
+            document.getElementById('protein-formula').textContent = proteinForm;
+            
+            const badge = document.getElementById('badge-stage-name');
+            badge.textContent = stageBadgeText;
+            if (ckdStage === 'predialysis') {
+                badge.className = "text-2xs font-bold px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 uppercase";
+            } else {
+                badge.className = "text-2xs font-bold px-2.5 py-1 rounded-full bg-teal-100 text-teal-700 uppercase";
+            }
+
+            // 4. Fluid targets limit (Water restriction)
+            let waterTarget = 1500;
+            let waterForm = "";
+            if (ckdStage === 'predialysis' || ckdStage === 'hemodialysis') {
+                // If late stage, limit to 1000ml (or Urine output + 500ml)
+                waterTarget = 1000;
+                waterForm = "จำกัดเข้มงวดกันหัวใจล้มเหลว";
+            } else if (ckdStage === 'peritoneal') {
+                waterTarget = 1200;
+                waterForm = "คุมน้ำเข้าป้องเกลือคั่ง";
+            } else {
+                waterTarget = 1800;
+                waterForm = "ขับของเสียสะสม ดื่มได้ค่อนข้างปกติ";
+            }
+            calculatedWaterTarget = waterTarget;
+            document.getElementById('target-water').innerHTML = `${waterTarget.toLocaleString()} <span class="text-xs font-normal">มล.</span>`;
+            document.getElementById('water-formula').textContent = waterForm;
+            document.getElementById('water-tracker-target').textContent = waterTarget;
+            updateWaterTrackerUI();
+
+            // 5. Intelligent warnings based on entered LAB results
+            const alertBox = document.getElementById('lab-alerts-container');
+            alertBox.innerHTML = "";
+            let alerts = [];
+
+            if (labK) {
+                if (labK > 5.0) {
+                    alerts.push(`
+                        <div class="bg-rose-50 border-l-4 border-rose-500 p-3 text-2xs text-rose-800 rounded-r-lg">
+                            <i class="fa-solid fa-triangle-exclamation mr-1 text-xs"></i> 
+                            <strong>ค่าโพแทสเซียม (${labK}) สูงเกินเกณฑ์!</strong> แนะนำเลี่ยงผักผลไม้ดิบทั้งหมด ต้องลวกต้มผักบีบน้ำทิ้งก่อนทาน งดกล้วย มะเขือเทศ ส้ม ทุเรียน ทุกชนิด
+                        </div>
+                    `);
+                } else if (labK < 3.5) {
+                    alerts.push(`
+                        <div class="bg-amber-50 border-l-4 border-amber-500 p-3 text-2xs text-amber-800 rounded-r-lg">
+                            <i class="fa-solid fa-circle-exclamation mr-1 text-xs"></i> 
+                            <strong>ค่าโพแทสเซียม (${labK}) ค่อนข้างต่ำ:</strong> ทานผักผลไม้โพแทสเซียมปานกลางได้เพิ่มขึ้น เช่น ฝรั่ง สับปะรด เพื่อป้องกันตะคริว
+                        </div>
+                    `);
+                }
+            }
+
+            if (labP) {
+                if (labP > 4.5) {
+                    alerts.push(`
+                        <div class="bg-rose-50 border-l-4 border-rose-500 p-3 text-2xs text-rose-800 rounded-r-lg">
+                            <i class="fa-solid fa-triangle-exclamation mr-1 text-xs"></i> 
+                            <strong>ค่าฟอสฟอรัส (${labP}) สูงกว่ามาตรฐาน!</strong> ห้ามทานนม เนย เบเกอรี่ ไข่แดง น้ำอัดลมสีเข้มอย่างเด็ดขาด และปรึกษาแพทย์เรื่องทานยาจับฟอสฟอรัสพร้อมมื้ออาหาร
+                        </div>
+                    `);
+                }
+            }
+
+            if (alerts.length > 0) {
+                alertBox.classList.remove('hidden');
+                alerts.forEach(html => {
+                    alertBox.innerHTML += html;
+                });
+            } else {
+                alertBox.classList.add('hidden');
+            }
+
+            // Sync with meal planning day contents
+            updatePlannerUI();
+        }
+
+        // --- 6. FLUID INTAKE SYSTEM ---
+        function addWater(amount) {
+            currentWaterIntake = Math.min(calculatedWaterTarget * 1.5, currentWaterIntake + amount);
+            updateWaterTrackerUI();
+        }
+
+        function resetWater() {
+            currentWaterIntake = 0;
+            updateWaterTrackerUI();
+        }
+
+        function updateWaterTrackerUI() {
+            document.getElementById('water-tracker-value').textContent = currentWaterIntake;
+            const percentage = Math.min(100, Math.round((currentWaterIntake / calculatedWaterTarget) * 100));
+            const progressBar = document.getElementById('water-progress-bar');
+            progressBar.style.width = `${percentage}%`;
+            
+            if (percentage > 100) {
+                progressBar.className = "bg-rose-600 h-full rounded-full transition-all duration-300";
+            } else if (percentage > 85) {
+                progressBar.className = "bg-amber-500 h-full rounded-full transition-all duration-300";
+            } else {
+                progressBar.className = "bg-sky-500 h-full rounded-full transition-all duration-300";
+            }
+        }
+
+        // --- 7. MEAL PLANNER ENGINE ---
+        function changePlannerDay(dayKey) {
+            activePlannerDay = dayKey;
+
+            // Highlight active button pill
+            document.querySelectorAll('[id^="btn-day-"]').forEach(btn => {
+                btn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-50 transition-all";
+            });
+            const activeBtn = document.getElementById(`btn-day-${dayKey}`);
+            if (activeBtn) {
+                activeBtn.className = "px-3 py-1.5 text-xs font-semibold rounded-lg bg-teal-600 text-white transition-all";
+            }
+
+            updatePlannerUI();
+        }
+
+        function updatePlannerUI() {
+            // Determine stage grouping
+            let stageGroup = "low";
+            if (selectedStage === 'hemodialysis' || selectedStage === 'peritoneal') {
+                stageGroup = "high";
+            }
+
+            const dayPlan = weeklyPlannersByStage[stageGroup][activePlannerDay];
+            
+            // Map individual meal codes to recipes database
+            const breakfastRecipe = recipesDatabase.find(r => r.code === "pb"); // Low phosphorus breakfast standard
+            let lunchRecipe = recipesDatabase.find(r => r.code === "pl");
+            let dinnerRecipe = recipesDatabase.find(r => r.code === "pd");
+
+            if (stageGroup === "high") {
+                lunchRecipe = recipesDatabase.find(r => r.code === "dial_2");
+                dinnerRecipe = recipesDatabase.find(r => r.code === "dial_1");
+            }
+
+            // Calculate scaled values based on Ideal Body Weight (IBW) scale
+            // If the user's calculated protein target is higher, we scale protein proportionally 
+            const defaultProteinBase = stageGroup === "low" ? 33 : 58;
+            const currentProteinTarget = parseFloat(document.getElementById('target-protein').innerText);
+            const scaleRatio = (currentProteinTarget / defaultProteinBase) || 1.0;
+
+            // Day title update
+            document.getElementById('plan-current-day-label').textContent = `${activePlannerDay.toUpperCase()} (${stageGroup === 'low' ? 'คุมโปรตีนต่ำ' : 'เน้นโปรตีนเพิ่ม'})`;
+            document.getElementById('plan-current-day-title').textContent = `ตารางโภชนาการไตประจำ${dayNamesTh[activePlannerDay]}`;
+            
+            const totalCals = Math.round(parseFloat(document.getElementById('target-cal').innerText));
+            document.getElementById('plan-day-totals').innerHTML = `~ ${totalCals.toLocaleString()} kcal | โปรตีน ${currentProteinTarget.toFixed(1)} กรัม`;
+
+            // Set Breakfast UI block
+            document.getElementById('pb-title').textContent = breakfastRecipe.title;
+            document.getElementById('pb-desc').textContent = breakfastRecipe.ingredients.slice(0, 3).join(', ');
+            document.getElementById('pb-kcal').textContent = `~ ${Math.round(breakfastRecipe.cal * (totalCals/1650))} kcal`;
+            document.getElementById('pb-protein').textContent = `โปรตีน: ${Math.round(breakfastRecipe.protein * scaleRatio)} กรัม`;
+
+            // Set Lunch UI block
+            document.getElementById('pl-title').textContent = lunchRecipe.title;
+            document.getElementById('pl-desc').textContent = lunchRecipe.ingredients.slice(0, 3).join(', ');
+            document.getElementById('pl-kcal').textContent = `~ ${Math.round(lunchRecipe.cal * (totalCals/1650))} kcal`;
+            document.getElementById('pl-protein').textContent = `โปรตีน: ${Math.round(lunchRecipe.protein * scaleRatio)} กรัม`;
+
+            // Set Dinner UI block
+            document.getElementById('pd-title').textContent = dinnerRecipe.title;
+            document.getElementById('pd-desc').textContent = dinnerRecipe.ingredients.slice(0, 3).join(', ');
+            document.getElementById('pd-kcal').textContent = `~ ${Math.round(dinnerRecipe.cal * (totalCals/1650))} kcal`;
+            document.getElementById('pd-protein').textContent = `โปรตีน: ${Math.round(dinnerRecipe.protein * scaleRatio)} กรัม`;
+
+            // Set Dynamic snack warnings/suggestions
+            const snackRecom = document.getElementById('plan-snack-recommend');
+            if (stageGroup === "low") {
+                snackRecom.textContent = "วุ้นเส้นลวกจิ้มหวานอ่อน, ซ่าหริ่มใบเตย หรือลอดช่องสิงคโปร์กะทิเจือจาง (แป้งคาร์บสะอาดไร้ไนโตรเจน ช่วยเติมพละกำลังโดยไม่ทำร้ายไต)";
+            } else {
+                snackRecom.textContent = "ถั่วแอลมอนด์ต้มจืดไร้เกลือ 10 เม็ด หรือไข่ต้มขาวแผ่นจิ้มซอสลดเค็ม (ช่วยให้คุณได้รับโปรตีนเพิ่มชดเชยการฟอกไตไม่ให้ตัวผอมซีด)";
+            }
+        }
+
+        // --- 8. RECIPES DIRECTORY ENGINE ---
+        function renderRecipesGrid(filteredList = null) {
+            const grid = document.getElementById('recipes-grid');
+            grid.innerHTML = "";
+
+            let recipes = recipesDatabase;
+            if (filteredList) {
+                recipes = filteredList;
+            }
+
+            recipes.forEach(recipe => {
+                const isLow = recipe.stageType === "low-prot";
+                const badgeStyle = isLow 
+                    ? "bg-teal-50 text-teal-700 border border-teal-100" 
+                    : "bg-rose-50 text-rose-700 border border-rose-100";
+                
+                const card = document.createElement('div');
+                card.className = "bg-white rounded-2xl border border-slate-100 p-5 shadow-2xs hover:shadow-xs transition-all flex flex-col justify-between";
+                card.innerHTML = `
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="text-3xs font-bold px-2 py-1 rounded-md ${badgeStyle}">
+                                ${isLow ? '<i class="fa-solid fa-circle-check"></i> ไตระยะ 3-5 (โปรตีนต่ำ)' : '<i class="fa-solid fa-kit"></i> ฟอกไต (โปรตีนสูง)'}
+                            </span>
+                            <span class="text-xs font-bold text-teal-600">${recipe.cal} kcal</span>
+                        </div>
+                        <h3 class="font-bold text-slate-800 text-sm sm:text-base mb-2 line-clamp-1">${recipe.title}</h3>
+                        
+                        <!-- Mini metrics -->
+                        <div class="grid grid-cols-4 gap-1.5 py-2 border-y border-slate-50 my-3 text-center">
+                            <div>
+                                <span class="block text-4xs text-slate-400 font-bold uppercase">โปรตีน</span>
+                                <span class="font-extrabold text-slate-700 text-xs">${recipe.protein}g</span>
+                            </div>
+                            <div>
+                                <span class="block text-4xs text-slate-400 font-bold uppercase">โซเดียม</span>
+                                <span class="font-extrabold text-slate-700 text-xs">${recipe.sodium}mg</span>
+                            </div>
+                            <div>
+                                <span class="block text-4xs text-slate-400 font-bold uppercase">โพแทส</span>
+                                <span class="font-extrabold text-slate-700 text-xs">${recipe.potassium}mg</span>
+                            </div>
+                            <div>
+                                <span class="block text-4xs text-slate-400 font-bold uppercase">ฟอสฟอรัส</span>
+                                <span class="font-extrabold text-slate-700 text-xs">${recipe.phosphorus}mg</span>
+                            </div>
+                        </div>
+
+                        <!-- Info tag checklist -->
+                        <div class="flex flex-wrap gap-1.5 mb-4">
+                            ${recipe.tags.map(tag => `<span class="text-4xs font-semibold px-2 py-0.5 bg-slate-50 rounded text-slate-500">${tag}</span>`).join('')}
+                        </div>
+                    </div>
+
+                    <button onclick="openRecipeModal('${recipe.id}')" class="w-full py-2 bg-teal-50 hover:bg-teal-100 text-teal-700 text-xs font-bold rounded-xl transition-all flex items-center justify-center space-x-1">
+                        <i class="fa-solid fa-receipt"></i>
+                        <span>วิธีปรุงและส่วนผสมโรคไต</span>
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterRecipes(category) {
+            document.querySelectorAll('.recipe-filter-btn').forEach(btn => {
+                btn.className = "recipe-filter-btn px-4 py-2 text-xs font-semibold rounded-lg text-slate-600 bg-slate-50 hover:bg-slate-100 whitespace-nowrap";
+            });
+            event.target.className = "recipe-filter-btn px-4 py-2 text-xs font-semibold rounded-lg bg-teal-600 text-white whitespace-nowrap";
+
+            if (category === "all") {
+                renderRecipesGrid();
+            } else {
+                const filtered = recipesDatabase.filter(r => r.stageType === category);
+                renderRecipesGrid(filtered);
+            }
+        }
+
+        function searchRecipes() {
+            const query = document.getElementById('recipe-search').value.toLowerCase().trim();
+            const filtered = recipesDatabase.filter(recipe => 
+                recipe.title.toLowerCase().includes(query) || 
+                recipe.ingredients.some(ing => ing.toLowerCase().includes(query))
+            );
+            renderRecipesGrid(filtered);
+        }
+
+        // View recipe modal details by custom code (Used inside planners)
+        function viewRecipeDetailByCode(code) {
+            let stageGroup = "low";
+            if (selectedStage === 'hemodialysis' || selectedStage === 'peritoneal') {
+                stageGroup = "high";
+            }
+
+            let foundRecipe = null;
+            if (code === 'pb') {
+                foundRecipe = recipesDatabase.find(r => r.code === "pb");
+            } else if (code === 'pl') {
+                foundRecipe = stageGroup === "low" ? recipesDatabase.find(r => r.code === "pl") : recipesDatabase.find(r => r.code === "dial_2");
+            } else if (code === 'pd') {
+                foundRecipe = stageGroup === "low" ? recipesDatabase.find(r => r.code === "pd") : recipesDatabase.find(r => r.code === "dial_1");
+            }
+
+            if (foundRecipe) {
+                openRecipeModal(foundRecipe.id);
+            }
+        }
+
+        // --- 9. RECIPE MODAL WINDOW ENGINE ---
+        function openRecipeModal(recipeId) {
+            const recipe = recipesDatabase.find(r => r.id === recipeId);
+            if (!recipe) return;
+
+            const modalContent = document.getElementById('modal-content');
+            
+            // Scaling protein based on calculated IBW
+            let stageGroup = recipe.stageType === "low-prot" ? "low" : "high";
+            const defaultProteinBase = stageGroup === "low" ? 33 : 58;
+            const currentProteinTarget = parseFloat(document.getElementById('target-protein').innerText);
+            const scaleRatio = (currentProteinTarget / defaultProteinBase) || 1.0;
+
+            const ingredientsHtml = recipe.ingredients.map(ing => `
+                <li class="flex items-center space-x-2 py-1.5 border-b border-slate-50 text-xs text-slate-600">
+                    <i class="fa-regular fa-square text-teal-500"></i>
+                    <span>${ing}</span>
+                </li>
+            `).join('');
+
+            modalContent.innerHTML = `
+                <div class="mb-3">
+                    <span class="text-3xs font-bold px-2 py-1 rounded bg-teal-50 text-teal-700 border border-teal-100 uppercase tracking-wide">
+                        สูตรอาหารโภชนบำบัดโรคไตวาย
+                    </span>
+                </div>
+                <h3 class="text-lg md:text-xl font-extrabold text-slate-800 mb-2">${recipe.title}</h3>
+                
+                <!-- Nutrient targets indicators -->
+                <div class="grid grid-cols-4 gap-2 text-center my-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div>
+                        <span class="text-4xs text-slate-400 block font-bold uppercase">พลังงาน</span>
+                        <span class="text-sm font-extrabold text-slate-800">${recipe.cal} kcal</span>
+                    </div>
+                    <div>
+                        <span class="text-4xs text-teal-600 block font-bold uppercase">โปรตีน (P)</span>
+                        <span class="text-sm font-extrabold text-teal-700">${Math.round(recipe.protein * scaleRatio)} กรัม</span>
+                    </div>
+                    <div>
+                        <span class="text-4xs text-blue-600 block font-bold uppercase">โซเดียม (Na)</span>
+                        <span class="text-sm font-extrabold text-blue-700">${recipe.sodium} มก.</span>
+                    </div>
+                    <div>
+                        <span class="text-4xs text-indigo-600 block font-bold uppercase">ฟอสฟอรัส (P)</span>
+                        <span class="text-sm font-extrabold text-indigo-700">${recipe.phosphorus} มก.</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                    <!-- Ingredients List -->
+                    <div>
+                        <h4 class="font-bold text-xs text-slate-800 mb-2.5 flex items-center">
+                            <i class="fa-solid fa-basket-shopping text-teal-600 mr-2"></i> วัตถุดิบและสัดส่วน
+                        </h4>
+                        <ul class="space-y-0.5">
+                            ${ingredientsHtml}
+                        </ul>
+                    </div>
+
+                    <!-- Instructions -->
+                    <div>
+                        <h4 class="font-bold text-xs text-slate-800 mb-2.5 flex items-center">
+                            <i class="fa-solid fa-kitchen-set text-teal-600 mr-2"></i> วิธีการทำความสะอาดและปรุงอาหาร
+                        </h4>
+                        <div class="p-4 rounded-xl border border-dashed border-teal-200 bg-teal-50/20 text-xs text-slate-600 leading-relaxed">
+                            ${recipe.instructions}
+                            <p class="text-4xs text-amber-600 font-semibold mt-3">*เคล็ดลับสำหรับผู้ป่วยโรคไต: สำหรับผักกวางตุ้งหรือกะหล่ำปลี ควรลวกต้มในน้ำร้อนจัดเพื่อช่วยลดสารฟอสฟอรัสและโพแทสเซียมออกไปก่อนนำมาผัดจริง</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('recipe-modal').classList.remove('hidden');
+        }
+
+        function closeRecipeModal() {
+            document.getElementById('recipe-modal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
